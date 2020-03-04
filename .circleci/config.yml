@@ -8,11 +8,11 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-3.7:
+      - test-37:
           filters:
             tags:
               only: /.*/
-      - test-3.6:
+      - test-36:
           filters:
             tags:
               only: /.*/
