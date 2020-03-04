@@ -8,23 +8,23 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-3.7:
+      - test-37:
           filters:
             tags:
               only: /.*/
-      - test-3.6:
+      - test-36:
           filters:
             tags:
               only: /.*/
-      - test-3.5:
+      - test-35:
           filters:
             tags:
               only: /.*/
       - deploy:
           requires:
-            - test-3.7
-            - test-3.6
-            - test-3.5
+            - test-37
+            - test-36
+            - test-35
           filters:
             tags:
               only: /^v.*/
@@ -32,7 +32,7 @@ workflows:
               ignore: /.*/
 
 jobs:
-  test-3.7: &test-template
+  test-37: &test-template
     docker:
       - image: circleci/python:3.7
     working_directory: ~/pytest-opentmi
@@ -69,12 +69,12 @@ jobs:
           path: junit
           destination: juni
 
-  test-3.6:
+  test-36:
     <<: *test-template
     docker:
     - image: circleci/python:3.6
 
-  test-3.5:
+  test-35:
     <<: *test-template
     docker:
       - image: circleci/python:3.5
