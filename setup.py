@@ -21,6 +21,7 @@ setup(
     # entry_points={"pytest11": ["html = pytest_opentmi.plugin"]},
     setup_requires=["setuptools_scm"],
     install_requires=["pytest>=5.0", "pytest-metadata"],
+    tests_require=["coverage", "mock", "pylint", "nose"],
     license="Mozilla Public License 2.0 (MPL 2.0)",
     keywords="py.test pytest opentmi report",
     python_requires=">=3.6",
