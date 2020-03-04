@@ -11,7 +11,7 @@ setup(
     name="pytest-opentmi",
     use_scm_version=True,
     description="pytest plugin for publish results to opentmi",
-    long_description=open("README.rst").read(),
+    long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     author="Jussi Vatjus-Anttila",
     author_email="jussiva@gmail.com",
