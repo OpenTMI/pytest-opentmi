@@ -11,20 +11,10 @@ workflows:
       - test-37:
           filters:
             tags:
-              only: /.*/
-      - test-36:
-          filters:
-            tags:
-              only: /.*/
-      - test-35:
-          filters:
-            tags:
-              only: /.*/
       - deploy:
           requires:
             - test-37
             - test-36
-            - test-35
           filters:
             tags:
               only: /^v.*/
@@ -42,7 +32,9 @@ commands:
           name: install dependencies
           command: |
             python --version
-            pip install -e .
+            virtualenv venv
+            . venv/bin/activate;
+            pip install -e .;
             pip install -e .[dev]
       - save_cache:
           paths:
@@ -60,8 +52,8 @@ jobs:
       - run:
           name: run tests
           command: |
-            . venv/bin/activate
             mkdir junit || true
+            . venv/bin/activate;
             nosetests --with-xunit --with-coverage --cover-package=opentmi_client --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
             coveralls || true
             pylint opentmi_client
@@ -79,27 +71,19 @@ jobs:
     docker:
     - image: circleci/python:3.6
 
-  test-35:
-    <<: *test-template
-    docker:
-      - image: circleci/python:3.5
-
   deploy:
     <<: *test-template
     steps:
       - setup
       - run:
-          name: verify git tag vs. version
-          command: |
-            python setup.py verify
-      - run:
           name: create packages
           command: |
+            . venv/bin/activate;
             python setup.py sdist
             python setup.py bdist_wheel
       - run:
           name: upload to pypi
           command: |
-            source venv/bin/activate
-            export PATH=$HOME/.local/bin:$PATH
+            . venv/bin/activate;
+            export PATH=$HOME/.local/bin:$PATH;
             twine upload dist/*
