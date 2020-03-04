@@ -1,4 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+:copyright: (c) 2020 by Jussi Vatjus-Anttila
+:license: MIT, see LICENSE for more details.
+"""
 from setuptools import setup
+
 
 setup(
     name="pytest-opentmi",
