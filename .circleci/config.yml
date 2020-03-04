@@ -8,9 +8,14 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-37:
+      - test-3.7:
           filters:
             tags:
+              only: /.*/
+      - test-3.6:
+          filters:
+            tags:
+              only: /.*/
       - deploy:
           requires:
             - test-37
@@ -54,9 +59,9 @@ jobs:
           command: |
             mkdir junit || true
             . venv/bin/activate;
-            nosetests --with-xunit --with-coverage --cover-package=opentmi_client --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
+            nosetests --with-xunit --with-coverage --cover-package=pytest_opentmi --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
             coveralls || true
-            pylint opentmi_client
+            pylint pytest_opentmi
       - store_artifacts:
           path: htmlcov
           destination: htmlcov
