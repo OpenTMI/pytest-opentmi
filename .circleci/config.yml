@@ -40,7 +40,7 @@ commands:
             virtualenv venv
             . venv/bin/activate;
             pip install -e .;
-            pip install -e .[test]
+            pip install -e .[dev]
       - save_cache:
           paths:
             - ./venv

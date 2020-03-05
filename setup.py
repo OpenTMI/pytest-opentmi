@@ -21,7 +21,17 @@ setup(
     # entry_points={"pytest11": ["html = pytest_opentmi.plugin"]},
     setup_requires=["setuptools_scm"],
     install_requires=["pytest>=5.0", "pytest-metadata"],
-    tests_require=["coverage", "mock", "pylint", "nose"],
+    # List additional groups of dependencies here (e.g. development
+    # dependencies). Users will be able to install these using the "extras"
+    # syntax, for example:
+    #
+    #   $ pip install .[dev]
+    #
+    # Similar to `install_requires` above, these must be valid existing
+    # projects.
+    extras_require={  # Optional
+        'dev': ['coverage', 'coveralls', 'mock', 'pylint', 'nose', 'pyinstaller']
+    },
     license="Mozilla Public License 2.0 (MPL 2.0)",
     keywords="py.test pytest opentmi report",
     python_requires=">=3.6",
