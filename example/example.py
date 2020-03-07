@@ -21,8 +21,8 @@ def test_first_test():
     print('testing')
 
 
-def test_second_test():
-    pass
+def test_second_test(record_property):
+    record_property("example_key", 1)
 
 
 def test_third_test():

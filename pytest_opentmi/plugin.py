@@ -140,22 +140,25 @@ class OpenTmiReport:
         result.execution.environment.framework.name = pytest_info.project_name
         result.execution.environment.framework.version = pytest_info.version
         result.job.id = os.environ.get('JOB_NAME', str(uuid.uuid1()))
+        result.execution.profiling = dict()
+        if report.user_properties:
+            result.execution.profiling['properties'] = dict()
+        for (key, value) in report.user_properties:
+            result.execution.profiling['properties'][key] = value
+
         return result
 
-    def _upload_report(self, session, result: Result):
+    def _link_session(self, session, result):
         result.campaign = session.name
-        #dut = Dut()
-        #dut.serial_number = ''
-        #result.append_dut(dut)
+        # dut = Dut()
+        # dut.serial_number = ''
+        # result.append_dut(dut)
 
-        result.execution.profiling = dict(
-            suite=dict(
-                duration=self._suite_time_delta
-            ),
-            numtests=self._numtests,
-            generated_at=self._generated
-        )
+        result.execution.profiling['suite'] = dict(duration=self._suite_time_delta)
+        result.execution.profiling['numtests'] = self._numtests
+        result.execution.profiling['generated_at'] = self._generated
 
+    def _upload_report(self, result: Result):
         try:
             pass
             #self._client.post_result(result)
@@ -168,8 +171,14 @@ class OpenTmiReport:
         self._numtests = self.passed + self.failed + self.xpassed + self.xfailed
         self._generated = datetime.datetime.now()
 
+        [self._link_session(session, result) for result in self.results]
+
+        [print(result.data) for result in self.results]
+
         num_cores = multiprocessing.cpu_count()
-        Parallel(n_jobs=num_cores, backend='threading')(delayed(self._upload_report)(session, result) for result in self.results)
+        Parallel(n_jobs=num_cores, backend='threading')(delayed(self._upload_report)(result) for result in self.results)
+
+    # pytest hooks
 
     def pytest_runtest_logreport(self, report):
         if report.when == 'call':
