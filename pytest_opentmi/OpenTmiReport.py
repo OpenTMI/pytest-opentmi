@@ -13,8 +13,9 @@ from urllib3.exceptions import NewConnectionError
 from . import __pytest_info__
 
 
+# pylint: disable=too-many-instance-attributes
 class OpenTmiReport:
-    def __init__(self, host, config):
+    def __init__(self, config):
         self.test_logs = []
         self.results = []
         self.errors = self.failed = 0
@@ -24,7 +25,10 @@ class OpenTmiReport:
         has_rerun = config.pluginmanager.hasplugin("rerunfailures")
         self.rerun = 0 if has_rerun else None
         self.config = config
+        host = config.getoption("opentmi")
+        token = config.getoption("opentmi_token")
         self._client = OpenTmiClient(host)
+        self._client.login_with_access_token(token)
 
     def _append_passed(self, report):
         if report.when == "call":
@@ -177,7 +181,8 @@ class OpenTmiReport:
         [print(result.data) for result in self.results]
 
         num_cores = multiprocessing.cpu_count()
-        Parallel(n_jobs=num_cores, backend='threading')(delayed(self._upload_report)(result) for result in self.results)
+        Parallel(n_jobs=num_cores, backend='threading')\
+            (delayed(self._upload_report)(result) for result in self.results)
 
     # pytest hooks
 

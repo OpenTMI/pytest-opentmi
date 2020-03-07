@@ -29,9 +29,9 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     host = config.getoption("opentmi")
     if host:
-       if not hasattr(config, "slaveinput"):
+        if not hasattr(config, "slaveinput"):
             # prevent opening opentmi reporter on slave nodes (xdist)
-            config._opentmi = OpenTmiReport(host, config)
+            config._opentmi = OpenTmiReport(config)
             config.pluginmanager.register(config._opentmi)
 
 
