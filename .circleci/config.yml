@@ -71,7 +71,7 @@ jobs:
           command: |
             . venv/bin/activate;
             cd example;
-            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example.py || true
+            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example.py
       - store_artifacts:
           path: htmlcov
           destination: htmlcov
