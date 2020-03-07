@@ -16,6 +16,9 @@ from . import __pytest_info__
 
 # pylint: disable=too-many-instance-attributes
 class OpenTmiReport:
+    """
+    OpenTmiReport class
+    """
     def __init__(self, config):
         """
         Constructor
@@ -85,6 +88,7 @@ class OpenTmiReport:
                                 f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
         self.results.append(result)
 
+    # pylint: disable=too-many-branches
     def _append_other(self, report):
         # For now, the only "other" the plugin give support is rerun
         self.rerun += 1
@@ -248,4 +252,5 @@ class OpenTmiReport:
         :param terminalreporter:
         :return:
         """
-        terminalreporter.write_sep("-", f"Uploaded {self._uploaded_success} results successfully, {self._uploaded_failed} failed")
+        terminalreporter.write_sep("-", f"Uploaded {self._uploaded_success} "
+                                        f"results successfully, {self._uploaded_failed} failed")

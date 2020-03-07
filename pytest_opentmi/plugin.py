@@ -7,7 +7,7 @@ from . import __version__
 from .OpenTmiReport import OpenTmiReport
 
 
-# pytest: disable=unused-argument
+# pylint: disable=unused-argument
 def pytest_report_header(config):
     """
     header hook
@@ -51,7 +51,7 @@ def pytest_configure(config):
         if not hasattr(config, "slaveinput"):
             # prevent opening opentmi reporter on slave nodes (xdist)
             config._opentmi = OpenTmiReport(config)  # pylint: disable=protected-access
-            config.pluginmanager.register(config._opentmi)
+            config.pluginmanager.register(config._opentmi)  # pylint: disable=protected-access
 
 
 def pytest_unconfigure(config):
