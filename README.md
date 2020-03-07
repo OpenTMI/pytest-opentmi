@@ -1,5 +1,10 @@
 ## pytest reporting plugin for opentmi
 
+[![CircleCI](https://circleci.com/gh/OpenTMI/pytest-opentmi/tree/master.svg?style=svg)](https://circleci.com/gh/OpenTMI/pytest-opentmi/tree/master)
+[![PyPI version](https://badge.fury.io/py/pytest-opentmi.svg)](https://badge.fury.io/py/pytest-opentmi)
+<!-- [![Coverage Status](https://coveralls.io/repos/github/OpenTMI/pytest-opentmi/badge.svg)](https://coveralls.io/github/OpenTMI/pytest-opentmi) -->
+
+
 pytest plugin to upload results to opentmi server.
 Plugin collect various metadata against opentmi Result -schema.
 User can extend details using pytest metadata plugin.
