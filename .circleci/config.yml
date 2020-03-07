@@ -62,6 +62,11 @@ jobs:
             nosetests --with-xunit --with-coverage --cover-package=pytest_opentmi --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
             coveralls || true
             pylint pytest_opentmi
+      - run:
+          name: test run
+          command: |
+            . venv/bin/activate;
+            pytest --path example/example.py -- --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang || true
       - store_artifacts:
           path: htmlcov
           destination: htmlcov
