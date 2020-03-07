@@ -3,18 +3,23 @@ import time
 import datetime
 import multiprocessing
 import uuid
+import pkg_resources
 # 3rd party modules
 from joblib import Parallel, delayed
 from opentmi_client.utils.exceptions import TransportException
 from opentmi_client import OpenTmiClient, Result
+from opentmi_client.api import Dut
 from urllib3.exceptions import NewConnectionError
 # app modules
-from . import __version__, __pypi_url__
-from . import hooks
+from . import __version__
 
 
-def pytest_addhooks(pluginmanager):
-    pluginmanager.add_hookspecs(hooks)
+def get_pytest_info():
+    return pkg_resources.get_distribution("pytest")
+
+
+def pytest_report_header(config):
+    return f'pytest-opentmi version: {__version__}'
 
 
 def pytest_addoption(parser):
@@ -59,28 +64,26 @@ class OpenTmiReport:
         self.passed = self.skipped = 0
         self.xfailed = self.xpassed = 0
         self.suite_start_time = None
-        self._sessionid = str(uuid.uuid1())
         has_rerun = config.pluginmanager.hasplugin("rerunfailures")
         self.rerun = 0 if has_rerun else None
         self.config = config
         self._client = OpenTmiClient(host)
 
-    def append_passed(self, report):
+    def _append_passed(self, report):
         if report.when == "call":
-            result = Result(tcid=report.head_line)
+            result = OpenTmiReport._new_result(report)
             result.execution.verdict = 'pass'
-            result.execution.duration = report.duration
             if hasattr(report, "wasxfail"):
                 self.xpassed += 1
                 result.execution.note = 'xpass'
-
             else:
                 self.passed += 1
             self.results.append(result)
 
-    def append_failed(self, report):
-        result = Result(tcid=report.head_line)
-        result.execution.duration = report.duration
+    def _append_failed(self, report):
+        result = OpenTmiReport._new_result(report)
+        result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
+                                f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
         if getattr(report, "when", None) == "call":
             result.execution.verdict = 'fail'
             if hasattr(report, "wasxfail"):
@@ -91,14 +94,13 @@ class OpenTmiReport:
                 self.failed += 1
         else:
             self.errors += 1
-            result = Result(tcid=report.head_line)
             result.execution.verdict = 'error'
         self.results.append(result)
 
-    def append_skipped(self, report):
-        result = Result(tcid=report.head_line)
-        result.execution.duration = report.duration
+    def _append_skipped(self, report):
+        result = OpenTmiReport._new_result(report)
         result.execution.verdict = 'skip'
+        result.execution.note = report.longrepr[2]
         if hasattr(report, "wasxfail"):
             self.xfailed += 1
             result.execution.note = 'xskil'
@@ -106,20 +108,46 @@ class OpenTmiReport:
             self.skipped += 1
         self.results.append(result)
 
+    def _append_inconclusive(self, report):
+        # For now, the only "other" the plugin give support is rerun
+        result = OpenTmiReport._new_result(report)
+        result.execution.verdict = 'inconclusive'
+        result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
+                                f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        self.results.append(result)
+
+    def _append_other(self, report):
+        # For now, the only "other" the plugin give support is rerun
+        self.rerun += 1
+        result = OpenTmiReport._new_result(report)
+        result.execution.verdict = 'inconclusive'
+        result.execution.note = 'rerun'
+        self.results.append(result)
+
     def append_other(self, report):
         # For now, the only "other" the plugin give support is rerun
         self.rerun += 1
-        result = Result(tcid=report.head_line)
-        result.execution.duration = report.duration
+        result = OpenTmiReport._new_result(report)
         result.execution.verdict = 'inconclusive'
         result.execution.note = 'rerun'
-        result.job.id
+        self.results.append(result)
+
+    @staticmethod
+    def _new_result(report):
+        result = Result(tcid=report.head_line)
+        pytest_info = get_pytest_info()
+        result.execution.duration = report.duration
+        result.execution.environment.framework.name = pytest_info.project_name
+        result.execution.environment.framework.version = pytest_info.version
+        result.job.id = os.environ.get('JOB_NAME', str(uuid.uuid1()))
+        return result
 
     def _upload_report(self, session, result: Result):
         result.campaign = session.name
-        result.campaign.id = self._sessionid
-        result.execution.environment.framework = 'pytest'
-        result.
+        #dut = Dut()
+        #dut.serial_number = ''
+        #result.append_dut(dut)
+
         result.execution.profiling = dict(
             suite=dict(
                 duration=self._suite_time_delta
@@ -129,7 +157,7 @@ class OpenTmiReport:
         )
 
         try:
-            print(result)
+            pass
             #self._client.post_result(result)
         except (TransportException, ConnectionRefusedError, NewConnectionError):
             pass
@@ -144,18 +172,25 @@ class OpenTmiReport:
         Parallel(n_jobs=num_cores, backend='threading')(delayed(self._upload_report)(session, result) for result in self.results)
 
     def pytest_runtest_logreport(self, report):
-        if report.passed:
-            self.append_passed(report)
-        elif report.failed:
-            self.append_failed(report)
-        elif report.skipped:
-            self.append_skipped(report)
-        else:
-            self.append_other(report)
+        if report.when == 'call':
+            # after test
+            if report.passed:
+                self._append_passed(report)
+            elif report.failed:
+                self._append_failed(report)
+            elif report.skipped:
+                self._append_skipped(report)
+            else:
+                self._append_other(report)
+        elif report.when == 'setup':
+            if report.failed:
+                self._append_inconclusive(report)
+            elif report.skipped:
+                self._append_skipped(report)
 
     def pytest_collectreport(self, report):
         if report.failed:
-            self.append_failed(report)
+            self._append_failed(report)
 
     def pytest_sessionstart(self, session):
         self.suite_start_time = time.time()
