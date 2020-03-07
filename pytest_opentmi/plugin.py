@@ -1,50 +1,66 @@
-from . import __version__, __pypi_url__
-from opentmi import opentmi
+"""
+pytest plugin
+"""
+import os
+# app modules
+from . import __version__
+from .OpenTmiReport import OpenTmiReport
 
 
-def pytest_addhooks(pluginmanager):
-    from . import hooks
-
-    pluginmanager.add_hookspecs(hooks)
+# pylint: disable=unused-argument
+def pytest_report_header(config):
+    """
+    header hook
+    :param config: unused
+    :return: None
+    """
+    return f'pytest-opentmi version: {__version__}'
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup("terminal reporting")
+    """
+    add option hook
+    :param parser: argparser
+    :return: None
+    """
+    group = parser.getgroup("opentmi reporting")
     group.addoption(
         "--opentmi",
         action="store",
-        dest="opentmi",
         metavar="host",
         default=None,
         help="Opentmi host",
     )
+    group.addoption(
+        "--opentmi_token",
+        action="store",
+        metavar="token",
+        default=os.environ.get('OPENTMI_TOKEN', None),
+        help="Opentmi access token",
+    )
 
 
 def pytest_configure(config):
+    """
+    configure hook
+    :param config: unused
+    :return: None
+    """
     host = config.getoption("opentmi")
     if host:
-       if not hasattr(config, "slaveinput"):
-            # prevent opening htmlpath on slave nodes (xdist)
-            config._opentmi = OpenTmiReport(host, config)
-            config.pluginmanager.register(config._opentmi)
+        if not hasattr(config, "slaveinput"):
+            # prevent opening opentmi reporter on slave nodes (xdist)
+            config._opentmi = OpenTmiReport(config)  # pylint: disable=protected-access
+            config.pluginmanager.register(config._opentmi)  # pylint: disable=protected-access
 
 
 def pytest_unconfigure(config):
+    """
+    unconfigure hook
+    :param config: unused
+    :return: None
+    """
     opentmi = getattr(config, "_opentmi", None)
     if opentmi:
-        del config._opentmi
+        del config._opentmi  # pylint: disable=protected-access
         config.pluginmanager.unregister(opentmi)
-
-
-class OpenTmiReport:
-    def __init__(self, host, config):
-        self.logfile = os.path.abspath(logfile)
-        self.test_logs = []
-        self.results = []
-        self.errors = self.failed = 0
-        self.passed = self.skipped = 0
-        self.xfailed = self.xpassed = 0
-        has_rerun = config.pluginmanager.hasplugin("rerunfailures")
-        self.rerun = 0 if has_rerun else None
-        self.self_contained = config.getoption("self_contained_html")
-        self.config = config

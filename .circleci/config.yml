@@ -8,58 +8,70 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-3.7:
+      - test-37:
           filters:
             tags:
               only: /.*/
-      - test-3.6:
-          filters:
-            tags:
-              only: /.*/
-      - test-3.5:
+      - test-36:
           filters:
             tags:
               only: /.*/
       - deploy:
           requires:
-            - test-3.7
-            - test-3.6
-            - test-3.5
+            - test-37
+            - test-36
           filters:
             tags:
               only: /^v.*/
             branches:
               ignore: /.*/
 
-jobs:
-  test-3.7: &test-template
-    docker:
-      - image: circleci/python:3.7
-    working_directory: ~/pytest-opentmi
+commands:
+  setup:
     steps:
       - checkout
       # Download and cache dependencies
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
+          key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
       - run:
           name: install dependencies
           command: |
             python --version
-            pip install -e .
+            virtualenv venv
+            . venv/bin/activate;
+            pip install -e .;
             pip install -e .[dev]
       - save_cache:
           paths:
             - ./venv
-          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
+          key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
+
+jobs:
+  test-37: &test-template
+    docker:
+      - image: circleci/python:3.7
+    working_directory: ~/pytest-opentmi
+    steps:
+      - setup
       # run tests!
       - run:
-          name: run tests
+          name: unit tests
           command: |
-            . venv/bin/activate
             mkdir junit || true
-            nosetests --with-xunit --with-coverage --cover-package=opentmi_client --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
+            . venv/bin/activate;
+            nosetests --with-xunit --with-coverage --cover-package=pytest_opentmi --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
             coveralls || true
-            pylint opentmi_client
+      - run:
+          name: pylint
+          command: |
+            . venv/bin/activate;
+            pylint pytest_opentmi
+      - run:
+          name: run
+          command: |
+            . venv/bin/activate;
+            cd example;
+            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example.py
       - store_artifacts:
           path: htmlcov
           destination: htmlcov
@@ -69,44 +81,24 @@ jobs:
           path: junit
           destination: juni
 
-  test-3.6:
+  test-36:
     <<: *test-template
     docker:
     - image: circleci/python:3.6
 
-  test-3.5:
-    <<: *test-template
-    docker:
-      - image: circleci/python:3.5
-
   deploy:
     <<: *test-template
     steps:
-      - checkout
-      # Download and cache dependencies
-      - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
-      - run:
-          name: install dependencies
-          command: |
-            pip install -e .
-            pip install -e .[dev]
-      - save_cache:
-          paths:
-            - ./venv
-          key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
-      - run:
-          name: verify git tag vs. version
-          command: |
-            python setup.py verify
+      - setup
       - run:
           name: create packages
           command: |
+            . venv/bin/activate;
             python setup.py sdist
             python setup.py bdist_wheel
       - run:
           name: upload to pypi
           command: |
-            source venv/bin/activate
-            export PATH=$HOME/.local/bin:$PATH
+            . venv/bin/activate;
+            export PATH=$HOME/.local/bin:$PATH;
             twine upload dist/*
