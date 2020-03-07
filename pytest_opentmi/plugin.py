@@ -50,7 +50,7 @@ def pytest_configure(config):
     if host:
         if not hasattr(config, "slaveinput"):
             # prevent opening opentmi reporter on slave nodes (xdist)
-            config._opentmi = OpenTmiReport(config)
+            config._opentmi = OpenTmiReport(config)  # pylint: disable=protected-access
             config.pluginmanager.register(config._opentmi)
 
 
@@ -62,5 +62,5 @@ def pytest_unconfigure(config):
     """
     opentmi = getattr(config, "_opentmi", None)
     if opentmi:
-        del config._opentmi
+        del config._opentmi  # pylint: disable=protected-access
         config.pluginmanager.unregister(opentmi)

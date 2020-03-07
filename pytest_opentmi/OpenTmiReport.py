@@ -8,10 +8,8 @@ import multiprocessing
 import uuid
 # 3rd party modules
 from joblib import Parallel, delayed
-from opentmi_client.utils.exceptions import TransportException
 from opentmi_client import OpenTmiClient, Result
 from opentmi_client.api import Dut, File, Provider
-from urllib3.exceptions import NewConnectionError
 # app modules
 from . import __pytest_info__
 
@@ -30,6 +28,9 @@ class OpenTmiReport:
         self.xfailed = self.xpassed = 0
         self._uploaded_failed = 0
         self._uploaded_success = 0
+        self._suite_time_delta = None
+        self._numtests = None
+        self._generated = None
         self.suite_start_time = None
         has_rerun = config.pluginmanager.hasplugin("rerunfailures")
         self.rerun = 0 if has_rerun else None
@@ -166,7 +167,7 @@ class OpenTmiReport:
         try:
             self._client.post_result(result)
             self._uploaded_success += 1
-        except Exception as error:
+        except Exception:  # pylint: disable=broad-except
             self._uploaded_failed += 1
 
     def _upload_reports(self, session):
@@ -175,8 +176,10 @@ class OpenTmiReport:
         self._numtests = self.passed + self.failed + self.xpassed + self.xfailed
         self._generated = datetime.datetime.now()
 
+        # pylint: disable=expression-not-assigned
         [self._link_session(session, result) for result in self.results]
 
+        # pylint: disable=expression-not-assigned
         [print(result.data) for result in self.results]
 
         token = self.config.getoption("opentmi_token")
@@ -186,7 +189,7 @@ class OpenTmiReport:
             num_cores = multiprocessing.cpu_count()
             Parallel(n_jobs=num_cores, backend='threading')\
                 (delayed(self._upload_report)(result) for result in self.results)
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-except
             print(error)
 
     # pytest hooks
@@ -222,6 +225,7 @@ class OpenTmiReport:
         if report.failed:
             self._append_failed(report)
 
+    # pylint: disable=unused-argument
     def pytest_sessionstart(self, session):
         """
         session start hook
