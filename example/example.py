@@ -30,10 +30,6 @@ def test_third_test():
     pass
 
 
-def test_failing():
-    assert 0, 'test fails'
-
-
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_skip_marker():
     pass
