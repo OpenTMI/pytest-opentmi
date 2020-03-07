@@ -17,6 +17,7 @@ def teardown_module(module):
     pass
 
 
+@pytest.mark.slow
 def test_first_test():
     print('testing')
 

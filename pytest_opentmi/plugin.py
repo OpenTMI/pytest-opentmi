@@ -8,7 +8,7 @@ import pkg_resources
 from joblib import Parallel, delayed
 from opentmi_client.utils.exceptions import TransportException
 from opentmi_client import OpenTmiClient, Result
-from opentmi_client.api import Dut
+from opentmi_client.api import Dut, File
 from urllib3.exceptions import NewConnectionError
 # app modules
 from . import __version__
@@ -134,7 +134,7 @@ class OpenTmiReport:
 
     @staticmethod
     def _new_result(report):
-        result = Result(tcid=report.head_line)
+        result = Result(tcid=report.nodeid)
         pytest_info = get_pytest_info()
         result.execution.duration = report.duration
         result.execution.environment.framework.name = pytest_info.project_name
@@ -145,6 +145,24 @@ class OpenTmiReport:
             result.execution.profiling['properties'] = dict()
         for (key, value) in report.user_properties:
             result.execution.profiling['properties'][key] = value
+        if report.keywords:
+            result.execution.profiling['keywords'] = []
+        for key in report.keywords:
+            result.execution.profiling['keywords'].append(key)
+
+        if report.capstdout:
+            log_file = File()
+            log_file.set_file_data(report.capstdout)
+            log_file.name = "stdout"
+            log_file.mime_type = "txt"
+            result.execution.append_log(log_file)
+
+        if report.capstderr:
+            log_file = File()
+            log_file.set_file_data(report.capstderr)
+            log_file.name = "stderr"
+            log_file.mime_type = "txt"
+            result.execution.append_log(log_file)
 
         return result
 
@@ -156,12 +174,12 @@ class OpenTmiReport:
 
         result.execution.profiling['suite'] = dict(duration=self._suite_time_delta)
         result.execution.profiling['numtests'] = self._numtests
-        result.execution.profiling['generated_at'] = self._generated
+        result.execution.profiling['generated_at'] = self._generated.isoformat()
 
     def _upload_report(self, result: Result):
         try:
             pass
-            #self._client.post_result(result)
+            self._client.post_result(result)
         except (TransportException, ConnectionRefusedError, NewConnectionError):
             pass
 
