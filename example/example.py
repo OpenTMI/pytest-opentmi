@@ -10,8 +10,8 @@ def teardown_function(function):
 
 
 def setup_module(module):
-    pass # assert 0, 'oh no, setup module fails'
-
+    #assert 0, 'oh no, setup module fails'
+    pass
 
 def teardown_module(module):
     pass
@@ -28,6 +28,10 @@ def test_second_test(record_property):
 
 def test_third_test():
     pass
+
+
+def test_failing():
+    assert 0, 'test fails'
 
 
 @pytest.mark.skip(reason="no way of currently testing this")
