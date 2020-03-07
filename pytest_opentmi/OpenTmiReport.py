@@ -1,3 +1,6 @@
+"""
+OpenTmiReport module
+"""
 import os
 import time
 import datetime
@@ -16,19 +19,23 @@ from . import __pytest_info__
 # pylint: disable=too-many-instance-attributes
 class OpenTmiReport:
     def __init__(self, config):
+        """
+        Constructor
+        :param config: pytest config object
+        """
         self.test_logs = []
         self.results = []
         self.errors = self.failed = 0
         self.passed = self.skipped = 0
         self.xfailed = self.xpassed = 0
+        self._uploaded_failed = 0
+        self._uploaded_success = 0
         self.suite_start_time = None
         has_rerun = config.pluginmanager.hasplugin("rerunfailures")
         self.rerun = 0 if has_rerun else None
         self.config = config
         host = config.getoption("opentmi")
-        token = config.getoption("opentmi_token")
         self._client = OpenTmiClient(host)
-        self._client.login_with_access_token(token)
 
     def _append_passed(self, report):
         if report.when == "call":
@@ -81,14 +88,6 @@ class OpenTmiReport:
         # For now, the only "other" the plugin give support is rerun
         self.rerun += 1
         result = self._new_result(report)
-        result.execution.verdict = 'inconclusive'
-        result.execution.note = 'rerun'
-        self.results.append(result)
-
-    def append_other(self, report):
-        # For now, the only "other" the plugin give support is rerun
-        self.rerun += 1
-        result = OpenTmiReport._new_result(report)
         result.execution.verdict = 'inconclusive'
         result.execution.note = 'rerun'
         self.results.append(result)
@@ -165,10 +164,10 @@ class OpenTmiReport:
 
     def _upload_report(self, result: Result):
         try:
-            pass
             self._client.post_result(result)
-        except (TransportException, ConnectionRefusedError, NewConnectionError):
-            pass
+            self._uploaded_success += 1
+        except Exception as error:
+            self._uploaded_failed += 1
 
     def _upload_reports(self, session):
         suite_stop_time = time.time()
@@ -180,13 +179,24 @@ class OpenTmiReport:
 
         [print(result.data) for result in self.results]
 
-        num_cores = multiprocessing.cpu_count()
-        Parallel(n_jobs=num_cores, backend='threading')\
-            (delayed(self._upload_report)(result) for result in self.results)
+        token = self.config.getoption("opentmi_token")
+        try:
+            self._client.login_with_access_token(token)
+
+            num_cores = multiprocessing.cpu_count()
+            Parallel(n_jobs=num_cores, backend='threading')\
+                (delayed(self._upload_report)(result) for result in self.results)
+        except Exception as error:
+            print(error)
 
     # pytest hooks
 
     def pytest_runtest_logreport(self, report):
+        """
+        logreport hook
+        :param report: TestReport
+        :return: None
+        """
         if report.when == 'call':
             # after test
             if report.passed:
@@ -204,14 +214,34 @@ class OpenTmiReport:
                 self._append_skipped(report)
 
     def pytest_collectreport(self, report):
+        """
+        collect report hook
+        :param report: TestReport
+        :return: None
+        """
         if report.failed:
             self._append_failed(report)
 
     def pytest_sessionstart(self, session):
+        """
+        session start hook
+        :param session: unused
+        :return: None
+        """
         self.suite_start_time = time.time()
 
     def pytest_sessionfinish(self, session):
+        """
+        session finish hook
+        :param session:
+        :return:
+        """
         self._upload_reports(session)
 
     def pytest_terminal_summary(self, terminalreporter):
-        terminalreporter.write_sep("-", f"Results uploaded to OpenTMI")
+        """
+        terminal summary hook
+        :param terminalreporter:
+        :return:
+        """
+        terminalreporter.write_sep("-", f"Uploaded {self._uploaded_success} results successfully, {self._uploaded_failed} failed")

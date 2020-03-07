@@ -1,14 +1,28 @@
+"""
+pytest plugin
+"""
 import os
 # app modules
 from . import __version__
 from .OpenTmiReport import OpenTmiReport
 
 
+# pytest: disable=unused-argument
 def pytest_report_header(config):
+    """
+    header hook
+    :param config: unused
+    :return: None
+    """
     return f'pytest-opentmi version: {__version__}'
 
 
 def pytest_addoption(parser):
+    """
+    add option hook
+    :param parser: argparser
+    :return: None
+    """
     group = parser.getgroup("opentmi reporting")
     group.addoption(
         "--opentmi",
@@ -27,6 +41,11 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
+    """
+    configure hook
+    :param config: unused
+    :return: None
+    """
     host = config.getoption("opentmi")
     if host:
         if not hasattr(config, "slaveinput"):
@@ -36,6 +55,11 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
+    """
+    unconfigure hook
+    :param config: unused
+    :return: None
+    """
     opentmi = getattr(config, "_opentmi", None)
     if opentmi:
         del config._opentmi
