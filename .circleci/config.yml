@@ -67,10 +67,11 @@ jobs:
             . venv/bin/activate;
             pylint pytest_opentmi
       - run:
-          name: test run
+          name: run
           command: |
             . venv/bin/activate;
-            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example/example.py || true
+            cd example;
+            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example.py || true
       - store_artifacts:
           path: htmlcov
           destination: htmlcov
