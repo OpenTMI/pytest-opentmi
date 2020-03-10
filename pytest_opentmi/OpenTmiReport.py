@@ -97,12 +97,16 @@ class OpenTmiReport:
         result.execution.note = 'rerun'
         self.results.append(result)
 
+    # pylint: disable=too-many-statements
     def _new_result(self, report):
         result = Result(tcid=report.nodeid)
         result.execution.duration = report.duration
         result.execution.environment.framework.name = __pytest_info__.project_name
         result.execution.environment.framework.version = __pytest_info__.version
-        result.job.id = os.environ.get('JOB_NAME', str(uuid.uuid1()))
+        result.execution.sut.commit_id = os.environ.get('GIT_COMMIT', "")
+        result.execution.sut.branch = os.environ.get('GIT_BRANCH ', "")
+        result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
+        result.campaign = os.environ.get('JOB_NAME', "")
         result.execution.profiling = dict()
         if report.user_properties:
             result.execution.profiling['properties'] = dict()
@@ -157,8 +161,7 @@ class OpenTmiReport:
 
         return result
 
-    def _link_session(self, session, result):
-        result.campaign = session.name
+    def _link_session(self, session, result):  # pylint: disable=unused-argument
         # dut = Dut()
         # dut.serial_number = ''
         # result.append_dut(dut)
