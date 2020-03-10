@@ -15,7 +15,7 @@ setup(
     long_description_content_type='text/markdown',
     author="Jussi Vatjus-Anttila",
     author_email="jussiva@gmail.com",
-    url="https://github.com/openmtmi/pytest-opentmi",
+    url="https://github.com/opentmi/pytest-opentmi",
     packages=["pytest_opentmi"],
     # package_data={"pytest_opentmi": ["resources/*"]},
     # entry_points={"pytest11": ["html = pytest_opentmi.plugin"]},
