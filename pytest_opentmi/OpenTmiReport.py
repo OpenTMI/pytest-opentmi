@@ -97,6 +97,7 @@ class OpenTmiReport:
         result.execution.note = 'rerun'
         self.results.append(result)
 
+    # pylint: disable=too-many-statements
     def _new_result(self, report):
         result = Result(tcid=report.nodeid)
         result.execution.duration = report.duration
@@ -160,7 +161,7 @@ class OpenTmiReport:
 
         return result
 
-    def _link_session(self, session, result):
+    def _link_session(self, session, result):  # pylint: disable=unused-argument
         # dut = Dut()
         # dut.serial_number = ''
         # result.append_dut(dut)
