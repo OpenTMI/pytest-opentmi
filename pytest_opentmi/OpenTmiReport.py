@@ -39,6 +39,7 @@ class OpenTmiReport:
         self.rerun = 0 if has_rerun else None
         self.config = config
         host = config.getoption("opentmi")
+        self._store_logs = config.getoption('opentmi_store_logs')
         self._client = OpenTmiClient(host)
 
     def _append_passed(self, report):
@@ -99,7 +100,7 @@ class OpenTmiReport:
 
     # pylint: disable=too-many-statements
     def _new_result(self, report):
-        result = Result(tcid=report.nodeid)
+        result = Result(tcid=report.head_line)
         result.execution.duration = report.duration
         result.execution.environment.framework.name = __pytest_info__.project_name
         result.execution.environment.framework.version = __pytest_info__.version
@@ -123,10 +124,14 @@ class OpenTmiReport:
             # Dut
             if key.startswith('DUT') and not dut:
                 dut = Dut()
-                result.append_dut(dut)
+                dut.type = 'hw'
+                result.execution.append_dut(dut)
             if key == 'DUT_SERIAL_NUMBER':
                 dut.serial_number = value
-                dut.type = 'hw'
+            if key == 'DUT_TYPE':
+                dut.type = value
+            # elif key == 'DUT_PLATFORM':
+            #     dut.platform = value
             elif key == 'DUT_VERSION':
                 dut.ver = value
             elif key == 'DUT_VENDOR':
@@ -144,15 +149,17 @@ class OpenTmiReport:
                 result.execution.sut.append_fut(value)
             elif key == 'SUT_COMMIT_ID':
                 result.execution.sut.commit_id = value
+            elif key == 'SUT_BRANCH':
+                result.execution.sut.branch = value
 
-        if report.capstdout:
+        if report.capstdout and self._store_logs:
             log_file = File()
             log_file.set_file_data(report.capstdout)
             log_file.name = "stdout"
             log_file.mime_type = "txt"
             result.execution.append_log(log_file)
 
-        if report.capstderr:
+        if report.capstderr and self._store_logs:
             log_file = File()
             log_file.set_file_data(report.capstderr)
             log_file.name = "stderr"
@@ -166,13 +173,16 @@ class OpenTmiReport:
         # dut.serial_number = ''
         # result.append_dut(dut)
 
-        result.execution.profiling['suite'] = dict(duration=self._suite_time_delta)
-        result.execution.profiling['numtests'] = self._numtests
+        result.execution.profiling['suite'] = dict(
+            duration=self._suite_time_delta,
+            numtests=self._numtests
+        )
         result.execution.profiling['generated_at'] = self._generated.isoformat()
 
     def _upload_report(self, result: Result):
         try:
-            self._client.post_result(result)
+            data = self._client.post_result(result)
+            print(data)
             self._uploaded_success += 1
         except Exception:  # pylint: disable=broad-except
             self._uploaded_failed += 1

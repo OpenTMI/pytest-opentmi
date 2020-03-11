@@ -38,6 +38,13 @@ def pytest_addoption(parser):
         default=os.environ.get('OPENTMI_TOKEN', None),
         help="Opentmi access token",
     )
+    group.addoption(
+        "--opentmi_store_logs",
+        action="store",
+        metavar="bool",
+        default=None,
+        help="Store logs to opentmi",
+    )
 
 
 def pytest_configure(config):
