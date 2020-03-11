@@ -15,9 +15,16 @@ Install using pip:
 
 `pip install pytest-opentmi`
 
+Enable plugin:
+
+conftest.py:
+```
+pytest_plugins = ("pytest_opentmi.plugin",)
+```
+
 Running with pytest:
 
-`pytest ...`
+`pytest --opentmi <host> --opentmi_token <token> [--opentmi_store_logs]`
 
 
 ### metadata
@@ -30,6 +37,7 @@ Usage:
 **Keys:**
 
 * Device Under Test:
+  * `DUT_TYPE`  (hw, simulator)
   * `DUT_SERIAL_NUMBER`
   * `DUT_VERSION`
   * `DUT_VENDOR`
@@ -40,3 +48,4 @@ Usage:
   * `SUT_COMPONENT` (array)
   * `SUT_FEATURE` (array)
   * `SUT_COMMIT_ID`
+  * `SUT_BRANCH`
