@@ -4,10 +4,10 @@ OpenTmiReport module
 import os
 import time
 import datetime
-import multiprocessing
 import uuid
+import inspect
+from multiprocessing.dummy import Pool as ThreadPool
 # 3rd party modules
-from joblib import Parallel, delayed
 from opentmi_client import OpenTmiClient, Result
 from opentmi_client.api import Dut, File, Provider
 # app modules
@@ -26,6 +26,8 @@ class OpenTmiReport:
         """
         self.test_logs = []
         self.results = []
+        self.tests = []
+        self._items = dict()
         self.errors = self.failed = 0
         self.passed = self.skipped = 0
         self.xfailed = self.xpassed = 0
@@ -98,9 +100,59 @@ class OpenTmiReport:
         result.execution.note = 'rerun'
         self.results.append(result)
 
+    @staticmethod
+    def get_tcid(report):
+        return report.head_line.rstrip("[]")
+
+    def _parse_test(self, report):
+        tcid = self.get_tcid(report)
+        key = OpenTmiReport.testKey(report)
+        item = self._items[key]
+        doc = inspect.getdoc(item.obj)
+        test = {
+            "tcid": tcid,
+            "status": {
+                "value": "released"
+            },
+            "other_info": {
+            }
+        }
+        if doc:
+            test["other_info"]["description"] = doc
+        type_list = ['installation',
+                     'compatibility',
+                     'smoke',
+                     'regression',
+                     'acceptance',
+                     'alpha',
+                     'beta',
+                     'stability',
+                     'functional',
+                     'destructive',
+                     'performance',
+                     'reliability']
+        keywords = list(report.keywords.keys())
+        test["other_info"]["keywords"] = keywords
+        for keyword in keywords:
+            if keyword in type_list:
+                test["other_info"]["type"] = keyword
+                break
+        if report.skipped:
+            test["execution"] = {
+                "skip": {
+                    "value": True,
+                    "reason": report.longrepr[2]
+                }
+            }
+        return test
+
     # pylint: disable=too-many-statements
     def _new_result(self, report):
-        result = Result(tcid=report.head_line)
+        tcid = self.get_tcid(report)
+
+        self.tests.append(self._parse_test(report))
+
+        result = Result(tcid=tcid)
         result.execution.duration = report.duration
         result.execution.environment.framework.name = __pytest_info__.project_name
         result.execution.environment.framework.version = __pytest_info__.version
@@ -116,6 +168,8 @@ class OpenTmiReport:
         if report.keywords:
             result.execution.profiling['keywords'] = []
         for key in report.keywords:
+            if key == "":
+                continue
             result.execution.profiling['keywords'].append(key)
         dut = None
         for item in self.config.option.metadata:
@@ -200,14 +254,17 @@ class OpenTmiReport:
         [print(result.data) for result in self.results]
 
         token = self.config.getoption("opentmi_token")
+        pool = ThreadPool(10)
+
         try:
             self._client.login_with_access_token(token)
-
-            num_cores = multiprocessing.cpu_count()
-            Parallel(n_jobs=num_cores, backend='threading')\
-                (delayed(self._upload_report)(result) for result in self.results)
+            pool.map(self._client.update_testcase, self.tests)
+            pool.map(self._upload_report, self.results)
+            pool.close()
+            pool.join()
         except Exception as error:  # pylint: disable=broad-except
             print(error)
+
 
     # pytest hooks
 
@@ -233,14 +290,13 @@ class OpenTmiReport:
             elif report.skipped:
                 self._append_skipped(report)
 
-    def pytest_collectreport(self, report):
-        """
-        collect report hook
-        :param report: TestReport
-        :return: None
-        """
-        if report.failed:
-            self._append_failed(report)
+    @staticmethod
+    def testKey(item):
+        return '_'.join(map(lambda x: str(x), list(item.location)))
+
+    def pytest_itemcollected(self, item):
+        key = OpenTmiReport.testKey(item)
+        self._items[key] = item
 
     # pylint: disable=unused-argument
     def pytest_sessionstart(self, session):
