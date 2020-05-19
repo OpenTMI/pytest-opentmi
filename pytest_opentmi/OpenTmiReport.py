@@ -9,7 +9,7 @@ import inspect
 from multiprocessing.dummy import Pool as ThreadPool
 # 3rd party modules
 from opentmi_client import OpenTmiClient, Result
-from opentmi_client.api import Dut, File, Provider
+from opentmi_client.api import Dut, File, Provider, Testcase
 # app modules
 from . import __pytest_info__
 
@@ -109,16 +109,10 @@ class OpenTmiReport:
         key = OpenTmiReport.testKey(report)
         item = self._items[key]
         doc = inspect.getdoc(item.obj)
-        test = {
-            "tcid": tcid,
-            "status": {
-                "value": "released"
-            },
-            "other_info": {
-            }
-        }
+        test = Testcase(tcid=tcid)
+        test.status.value = "released"
         if doc:
-            test["other_info"]["description"] = doc
+            test.other_info.description = doc
         type_list = ['installation',
                      'compatibility',
                      'smoke',
@@ -132,25 +126,21 @@ class OpenTmiReport:
                      'performance',
                      'reliability']
         keywords = list(report.keywords.keys())
-        test["other_info"]["keywords"] = keywords
+        test.other_info.keywords = keywords
         for keyword in keywords:
             if keyword in type_list:
-                test["other_info"]["type"] = keyword
+                test.other_info.type = keyword
                 break
         if report.skipped:
-            test["execution"] = {
-                "skip": {
-                    "value": True,
-                    "reason": report.longrepr[2]
-                }
-            }
+            test.execution.skip.value = True
+            test.execution.skip.reason = report.longrepr[2]
         return test
 
     # pylint: disable=too-many-statements
     def _new_result(self, report):
         tcid = self.get_tcid(report)
 
-        self.tests.append(self._parse_test(report))
+        self.tests.append(self._parse_test(report).data)
 
         result = Result(tcid=tcid)
         result.execution.duration = report.duration
@@ -252,6 +242,7 @@ class OpenTmiReport:
 
         # pylint: disable=expression-not-assigned
         [print(result.data) for result in self.results]
+        [print(test) for test in self.tests]
 
         token = self.config.getoption("opentmi_token")
         pool = ThreadPool(10)
