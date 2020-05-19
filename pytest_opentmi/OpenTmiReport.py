@@ -105,7 +105,7 @@ class OpenTmiReport:
         return report.head_line.rstrip("[]")
 
     def _parse_test(self, report):
-        tcid = self._get_tcid(report)
+        tcid = OpenTmiReport._get_tcid(report)
         key = OpenTmiReport._get_test_key(report)
         item = self._items[key]
         doc = inspect.getdoc(item.obj)
