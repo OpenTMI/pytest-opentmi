@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import unittest
 from pytest_opentmi.OpenTmiReport import OpenTmiReport
 
@@ -8,9 +7,8 @@ class MockPluginManager:
         return False
 
 
-@dataclass
 class MockConfig:
-    pluginmanager: MockPluginManager = MockPluginManager()
+    pluginmanager = MockPluginManager()
 
     def getoption(self, opt):
         if opt == 'opentmi':
