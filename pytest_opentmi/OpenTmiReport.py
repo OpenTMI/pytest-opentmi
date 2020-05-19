@@ -101,12 +101,12 @@ class OpenTmiReport:
         self.results.append(result)
 
     @staticmethod
-    def get_tcid(report):
+    def _get_tcid(report):
         return report.head_line.rstrip("[]")
 
     def _parse_test(self, report):
-        tcid = self.get_tcid(report)
-        key = OpenTmiReport.testKey(report)
+        tcid = self._get_tcid(report)
+        key = OpenTmiReport._get_test_key(report)
         item = self._items[key]
         doc = inspect.getdoc(item.obj)
         test = Testcase(tcid=tcid)
@@ -138,7 +138,7 @@ class OpenTmiReport:
 
     # pylint: disable=too-many-statements
     def _new_result(self, report):
-        tcid = self.get_tcid(report)
+        tcid = self._get_tcid(report)
 
         self.tests.append(self._parse_test(report).data)
 
@@ -256,6 +256,9 @@ class OpenTmiReport:
         except Exception as error:  # pylint: disable=broad-except
             print(error)
 
+    @staticmethod
+    def _get_test_key(item):
+        return '_'.join(map(str, list(item.location)))
 
     # pytest hooks
 
@@ -281,12 +284,13 @@ class OpenTmiReport:
             elif report.skipped:
                 self._append_skipped(report)
 
-    @staticmethod
-    def testKey(item):
-        return '_'.join(map(lambda x: str(x), list(item.location)))
-
     def pytest_itemcollected(self, item):
-        key = OpenTmiReport.testKey(item)
+        """
+        Test item collected hook
+        :param item: Collection
+        :return: None
+        """
+        key = OpenTmiReport._get_test_key(item)
         self._items[key] = item
 
     # pylint: disable=unused-argument
