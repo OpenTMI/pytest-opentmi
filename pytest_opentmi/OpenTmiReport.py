@@ -4,12 +4,12 @@ OpenTmiReport module
 import os
 import time
 import datetime
-import multiprocessing
 import uuid
+import inspect
+from multiprocessing.dummy import Pool as ThreadPool
 # 3rd party modules
-from joblib import Parallel, delayed
 from opentmi_client import OpenTmiClient, Result
-from opentmi_client.api import Dut, File, Provider
+from opentmi_client.api import Dut, File, Provider, Testcase
 # app modules
 from . import __pytest_info__
 
@@ -26,6 +26,8 @@ class OpenTmiReport:
         """
         self.test_logs = []
         self.results = []
+        self.tests = []
+        self._items = dict()
         self.errors = self.failed = 0
         self.passed = self.skipped = 0
         self.xfailed = self.xpassed = 0
@@ -98,9 +100,49 @@ class OpenTmiReport:
         result.execution.note = 'rerun'
         self.results.append(result)
 
+    @staticmethod
+    def _get_tcid(report):
+        return report.head_line.rstrip("[]")
+
+    def _parse_test(self, report):
+        tcid = OpenTmiReport._get_tcid(report)
+        key = OpenTmiReport._get_test_key(report)
+        item = self._items[key]
+        doc = inspect.getdoc(item.obj)
+        test = Testcase(tcid=tcid)
+        test.status.value = "released"
+        if doc:
+            test.other_info.description = doc
+        type_list = ['installation',
+                     'compatibility',
+                     'smoke',
+                     'regression',
+                     'acceptance',
+                     'alpha',
+                     'beta',
+                     'stability',
+                     'functional',
+                     'destructive',
+                     'performance',
+                     'reliability']
+        keywords = list(report.keywords.keys())
+        test.other_info.keywords = keywords
+        for keyword in keywords:
+            if keyword in type_list:
+                test.other_info.type = keyword
+                break
+        if report.skipped:
+            test.execution.skip.value = True
+            test.execution.skip.reason = report.longrepr[2]
+        return test
+
     # pylint: disable=too-many-statements
     def _new_result(self, report):
-        result = Result(tcid=report.head_line)
+        tcid = self._get_tcid(report)
+
+        self.tests.append(self._parse_test(report).data)
+
+        result = Result(tcid=tcid)
         result.execution.duration = report.duration
         result.execution.environment.framework.name = __pytest_info__.project_name
         result.execution.environment.framework.version = __pytest_info__.version
@@ -116,6 +158,8 @@ class OpenTmiReport:
         if report.keywords:
             result.execution.profiling['keywords'] = []
         for key in report.keywords:
+            if key == "":
+                continue
             result.execution.profiling['keywords'].append(key)
         dut = None
         for item in self.config.option.metadata:
@@ -198,16 +242,23 @@ class OpenTmiReport:
 
         # pylint: disable=expression-not-assigned
         [print(result.data) for result in self.results]
+        [print(test) for test in self.tests]
 
         token = self.config.getoption("opentmi_token")
+        pool = ThreadPool(10)
+
         try:
             self._client.login_with_access_token(token)
-
-            num_cores = multiprocessing.cpu_count()
-            Parallel(n_jobs=num_cores, backend='threading')\
-                (delayed(self._upload_report)(result) for result in self.results)
+            pool.map(self._client.update_testcase, self.tests)
+            pool.map(self._upload_report, self.results)
+            pool.close()
+            pool.join()
         except Exception as error:  # pylint: disable=broad-except
             print(error)
+
+    @staticmethod
+    def _get_test_key(item):
+        return '_'.join(map(str, list(item.location)))
 
     # pytest hooks
 
@@ -233,14 +284,14 @@ class OpenTmiReport:
             elif report.skipped:
                 self._append_skipped(report)
 
-    def pytest_collectreport(self, report):
+    def pytest_itemcollected(self, item):
         """
-        collect report hook
-        :param report: TestReport
+        Test item collected hook
+        :param item: Collection
         :return: None
         """
-        if report.failed:
-            self._append_failed(report)
+        key = OpenTmiReport._get_test_key(item)
+        self._items[key] = item
 
     # pylint: disable=unused-argument
     def pytest_sessionstart(self, session):
