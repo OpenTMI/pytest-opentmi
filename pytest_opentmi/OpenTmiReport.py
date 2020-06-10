@@ -75,11 +75,11 @@ class OpenTmiReport:
     def _append_skipped(self, report):
         result = self._new_result(report)
         result.execution.verdict = 'skip'
-        result.execution.note = report.longrepr[2]
         if hasattr(report, "wasxfail"):
             self.xfailed += 1
-            result.execution.note = 'xskil'
+            result.execution.note = f'wasxfail: {report.longrepr.reprcrash.message}'
         else:
+            result.execution.note = report.longrepr[2]
             self.skipped += 1
         self.results.append(result)
 
@@ -133,7 +133,10 @@ class OpenTmiReport:
                 break
         if report.skipped:
             test.execution.skip.value = True
-            test.execution.skip.reason = report.longrepr[2]
+            if hasattr(report, 'wasxfail'):
+                test.execution.skip.reason = report.wasxfail
+            else:
+                test.execution.skip.reason = report.longrepr[2]
         return test
 
     # pylint: disable=too-many-statements

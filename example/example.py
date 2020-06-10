@@ -37,3 +37,8 @@ def test_skip_marker():
 
 def test_skip():
     pytest.skip("unsupported configuration")
+
+
+@pytest.mark.xfail(reason='expected to fail')
+def test_xfail():
+    raise AssertionError('oh no')
