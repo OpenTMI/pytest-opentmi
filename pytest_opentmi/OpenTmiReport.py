@@ -175,7 +175,7 @@ class OpenTmiReport:
                 result.execution.append_dut(dut)
             if key == 'DUT_SERIAL_NUMBER':
                 dut.serial_number = value
-            if key == 'DUT_TYPE':
+            elif key == 'DUT_TYPE':
                 dut.type = value
             # elif key == 'DUT_PLATFORM':
             #     dut.platform = value
@@ -198,6 +198,10 @@ class OpenTmiReport:
                 result.execution.sut.commit_id = value
             elif key == 'SUT_BRANCH':
                 result.execution.sut.branch = value
+
+            # push to generic metadata
+            else:
+                result.execution.metadata.append(key, value)
 
         if report.capstdout and self._store_logs:
             log_file = File()
