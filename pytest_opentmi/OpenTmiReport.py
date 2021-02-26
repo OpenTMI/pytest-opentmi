@@ -153,7 +153,6 @@ class OpenTmiReport:
         result.execution.sut.branch = os.environ.get('GIT_BRANCH', "")
         result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
         result.campaign = os.environ.get('JOB_NAME', "")
-        result.execution.profiling = dict()
         if report.user_properties:
             result.execution.profiling['properties'] = dict()
         for (key, value) in report.user_properties:
@@ -201,7 +200,7 @@ class OpenTmiReport:
 
             # push to generic metadata
             else:
-                result.execution.metadata.append(key, value)
+                result.execution.metadata[key] = value
 
         if report.capstdout and self._store_logs:
             log_file = File()
