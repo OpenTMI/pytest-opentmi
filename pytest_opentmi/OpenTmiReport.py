@@ -27,7 +27,7 @@ class OpenTmiReport:
         self.test_logs = []
         self.results = []
         self.tests = []
-        self._items = dict()
+        self._items = {}
         self.errors = self.failed = 0
         self.passed = self.skipped = 0
         self.xfailed = self.xpassed = 0
@@ -87,8 +87,11 @@ class OpenTmiReport:
         # For now, the only "other" the plugin give support is rerun
         result = self._new_result(report)
         result.execution.verdict = 'inconclusive'
-        result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
-                                f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        if report.longrepr.reprcrash:
+            result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
+                                    f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        else:
+            result.execution.note = ''
         self.results.append(result)
 
     # pylint: disable=too-many-branches
@@ -154,7 +157,7 @@ class OpenTmiReport:
         result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
         result.campaign = os.environ.get('JOB_NAME', "")
         if report.user_properties:
-            result.execution.profiling['properties'] = dict()
+            result.execution.profiling['properties'] = {}
         for (key, value) in report.user_properties:
             result.execution.profiling['properties'][key] = value
         if report.keywords:
