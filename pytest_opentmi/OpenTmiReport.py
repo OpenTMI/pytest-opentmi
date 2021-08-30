@@ -87,8 +87,11 @@ class OpenTmiReport:
         # For now, the only "other" the plugin give support is rerun
         result = self._new_result(report)
         result.execution.verdict = 'inconclusive'
-        result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
-                                f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        if report.longrepr.reprcrash:
+            result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
+                                    f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        else:
+            result.execution.note = ''
         self.results.append(result)
 
     # pylint: disable=too-many-branches
