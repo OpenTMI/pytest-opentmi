@@ -27,7 +27,7 @@ class OpenTmiReport:
         self.test_logs = []
         self.results = []
         self.tests = []
-        self._items = dict()
+        self._items = {}
         self.errors = self.failed = 0
         self.passed = self.skipped = 0
         self.xfailed = self.xpassed = 0
@@ -157,7 +157,7 @@ class OpenTmiReport:
         result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
         result.campaign = os.environ.get('JOB_NAME', "")
         if report.user_properties:
-            result.execution.profiling['properties'] = dict()
+            result.execution.profiling['properties'] = {}
         for (key, value) in report.user_properties:
             result.execution.profiling['properties'][key] = value
         if report.keywords:
