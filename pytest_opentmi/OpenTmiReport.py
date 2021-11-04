@@ -154,6 +154,11 @@ class OpenTmiReport:
         result.execution.environment.framework.version = __pytest_info__.version
         result.execution.sut.commit_id = os.environ.get('GIT_COMMIT', "")
         result.execution.sut.branch = os.environ.get('GIT_BRANCH', "")
+        result.execution.sut.git_url = os.environ.get('GIT_URL', "")
+        # there might be multiple tags so split by ','
+        tag = os.environ.get('GIT_TAG', '')
+        tag = list(filter(None, tag.split(',')))  # cleanup empty items
+        result.execution.sut.tag = tag
         result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
         result.campaign = os.environ.get('JOB_NAME', "")
         if report.user_properties:
