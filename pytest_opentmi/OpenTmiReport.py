@@ -158,9 +158,7 @@ class OpenTmiReport:
         # there might be multiple tags so split by ','
         tag = os.environ.get('GIT_TAG', '')
         tag = list(filter(None, tag.split(',')))  # cleanup empty items
-        if tag:
-            # set list of tags when some exists
-            result.execution.sut.tag = tag
+        result.execution.sut.tag = tag
         result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
         result.campaign = os.environ.get('JOB_NAME', "")
         if report.user_properties:
