@@ -297,6 +297,9 @@ class OpenTmiReport:
                 self._append_inconclusive(report)
             elif report.skipped:
                 self._append_skipped(report)
+        elif report.when == 'teardown':
+            if report.failed:
+                self._append_inconclusive(report)
 
     def pytest_itemcollected(self, item):
         """
