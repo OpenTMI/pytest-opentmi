@@ -111,9 +111,7 @@ class OpenTmiReport:
                 self.failed += 1
                 self.results[-1].execution.verdict = 'fail'
                 self.results[-1].execution.note = f'Failed on teardown: {report.longrepr.reprcrash.message}\n' \
-                                        f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
-
-
+                                                  f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
 
     @staticmethod
     def _get_tcid(report):
