@@ -104,17 +104,27 @@ class OpenTmiReport:
         self.results.append(result)
 
     def _update_teardown_result(self, report):
+        """
+        Function to update last test result if teardown result != passed
+        Last test verdict == pass: Modify result as failed -> update verdict and notes
+        Last test verdict != pass, Update note with failed longrepr information
+        Function should be called only if teardown result != passed
+
+        :param report: report object
+        """
         last_result = self.results[-1]
         if last_result.execution.verdict == 'pass':
-            self.passed -= 1
-            self.failed += 1
+            # Fail the test if teardown failed:
+            self.passed -= 1  # self.passed was incremented in _append_passed() for call phase -> decrement passed
+            self.failed += 1  # self.failed have to be updated accordingly -> increment failed
             last_result.execution.verdict = 'fail'
             last_result.execution.note = f'Failed on teardown: {report.longrepr.reprcrash.message}\n' \
                                               f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
         else:
+            # No need for verdict modification, update info on execution note, to get info available in opentmi
             last_result.execution.note += f'\nFailed on teardown: {report.longrepr.reprcrash.message}\n' \
                                           f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
-        # update last_result
+        # update result with updated last_result
         self.results[-1] = last_result
 
     @staticmethod
@@ -312,6 +322,7 @@ class OpenTmiReport:
             elif report.skipped:
                 self._append_skipped(report)
         elif report.when == 'teardown':
+            # Update test result only if teardown result != passed
             if not report.passed:
                 self._update_teardown_result(report)
 
