@@ -103,15 +103,19 @@ class OpenTmiReport:
         result.execution.note = 'rerun'
         self.results.append(result)
 
-    def _overwrite_test_result(self, report):
-        # in case there is a fail in teardown phase of passed test, we want to actually fail the test
-        if getattr(report, "when", None) == "teardown":
-            if self.results[-1].execution.verdict == 'pass':
-                self.passed -= 1
-                self.failed += 1
-                self.results[-1].execution.verdict = 'fail'
-                self.results[-1].execution.note = f'Failed on teardown: {report.longrepr.reprcrash.message}\n' \
-                                                  f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+    def _update_teardown_result(self, report):
+        last_result = self.results[-1]
+        if last_result.execution.verdict == 'pass':
+            self.passed -= 1
+            self.failed += 1
+            last_result.execution.verdict = 'fail'
+            last_result.execution.note = f'Failed on teardown: {report.longrepr.reprcrash.message}\n' \
+                                              f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        else:
+            last_result.execution.note += f'\nFailed on teardown: {report.longrepr.reprcrash.message}\n' \
+                                          f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        # update last_result
+        self.results[-1] = last_result
 
     @staticmethod
     def _get_tcid(report):
@@ -308,8 +312,8 @@ class OpenTmiReport:
             elif report.skipped:
                 self._append_skipped(report)
         elif report.when == 'teardown':
-            if report.failed:
-                self._overwrite_test_result(report)
+            if not report.passed:
+                self._update_teardown_result(report)
 
     def pytest_itemcollected(self, item):
         """
