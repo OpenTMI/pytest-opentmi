@@ -229,6 +229,10 @@ class OpenTmiReport:
                 result.execution.sut.commit_id = value
             elif key == 'SUT_BRANCH':
                 result.execution.sut.branch = value
+            elif key == 'SUT_TAG':
+                result.execution.sut.tag = value
+            elif key == 'SUT_GIT_URL':
+                result.execution.sut.git_url = value
 
             # push to generic metadata
             else:
