@@ -52,13 +52,13 @@ jobs:
             htmlcov
             junit
       - name: install rel deps
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: |
           pip install twine
           python setup.py sdist
           python setup.py bdist_wheel
       - name: upload to pypi
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         env:
           TWINE_USERNAME: "${{secrets.TWINE_USERNAME}}"
           TWINE_PASSWORD: "${{secrets.TWINE_PASSWORD}}"
