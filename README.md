@@ -1,6 +1,6 @@
 ## pytest reporting plugin for opentmi
 
-[![CircleCI](https://circleci.com/gh/OpenTMI/pytest-opentmi/tree/master.svg?style=svg)](https://circleci.com/gh/OpenTMI/pytest-opentmi/tree/master)
+[![Unit tests](https://github.com/OpenTMI/pytest-opentmi/actions/workflows/build-test.yml/badge.svg)](https://github.com/OpenTMI/pytest-opentmi/actions/workflows/build-test.yml)
 [![PyPI version](https://badge.fury.io/py/pytest-opentmi.svg)](https://badge.fury.io/py/pytest-opentmi)
 <!-- [![Coverage Status](https://coveralls.io/repos/github/OpenTMI/pytest-opentmi/badge.svg)](https://coveralls.io/github/OpenTMI/pytest-opentmi) -->
 
