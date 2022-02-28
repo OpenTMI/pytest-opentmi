@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-:copyright: (c) 2020 by Jussi Vatjus-Anttila
+:copyright: (c) 2022 by Jussi Vatjus-Anttila
 :license: MIT, see LICENSE for more details.
 """
 from setuptools import setup
@@ -48,8 +48,9 @@ setup(
         "Topic :: Utilities",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3 :: Only",
     ],
 )
