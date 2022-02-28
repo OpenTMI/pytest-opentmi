@@ -36,7 +36,7 @@ jobs:
             pylint pytest_opentmi
       - name: run example
         working-directory: example
-        command: |
+        run: |
             pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example.py
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
