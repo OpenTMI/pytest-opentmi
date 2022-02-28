@@ -15,7 +15,7 @@ Install using pip:
 
 `pip install pytest-opentmi`
 
-plugin is enabled by default.
+plugin is enabled by using `--opentmi` CLI argument.
 
 Running with pytest:
 
