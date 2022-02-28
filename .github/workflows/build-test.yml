@@ -29,6 +29,7 @@ jobs:
           pip install -e .[dev]
       - name: run tests
         run: |
+          mkdir junit || true
           nosetests --with-xunit --with-coverage --cover-package=pytest_opentmi --cover-html --cover-html-dir=htmlcov --cover-xml-file=coverage.xml --xunit-file=junit/results.xml
           coveralls
       - name: pylint
