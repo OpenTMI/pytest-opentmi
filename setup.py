@@ -18,7 +18,7 @@ setup(
     url="https://github.com/opentmi/pytest-opentmi",
     packages=["pytest_opentmi"],
     # package_data={"pytest_opentmi": ["resources/*"]},
-    # entry_points={"pytest11": ["html = pytest_opentmi.plugin"]},
+    entry_points={"pytest11": ["pytest_opentmi = pytest_opentmi.plugin"]},
     setup_requires=["setuptools_scm"],
     install_requires=["pytest>=5.0", "pytest-metadata", "opentmi-client>=0.10.1", "joblib"],
     # List additional groups of dependencies here (e.g. development
