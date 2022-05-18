@@ -16,11 +16,12 @@ from . import __pytest_info__
 
 # pylint: disable=too-many-instance-attributes
 class OpenTmiReport:
-
-    MAX_EXEC_NOTE_LENGTH: int = int(os.environ.get('OPENTMI_MAX_EXEC_NOTE_LENGTH', '1000'))
     """
     OpenTmiReport class
     """
+
+    MAX_EXEC_NOTE_LENGTH: int = int(os.environ.get('OPENTMI_MAX_EXEC_NOTE_LENGTH', '1000'))
+
     def __init__(self, config):
         """
         Constructor
