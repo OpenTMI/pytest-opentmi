@@ -16,6 +16,8 @@ from . import __pytest_info__
 
 # pylint: disable=too-many-instance-attributes
 class OpenTmiReport:
+
+    MAX_EXEC_NOTE_LENGTH: int = int(os.environ.get('OPENTMI_MAX_EXEC_NOTE_LENGTH', '1000'))
     """
     OpenTmiReport class
     """
@@ -57,8 +59,8 @@ class OpenTmiReport:
 
     def _append_failed(self, report):
         result = self._new_result(report)
-        result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
-                                f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        result.execution.note = f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}:\n'\
+                                f'{report.longrepr.reprcrash.message}'
         if getattr(report, "when", None) == "call":
             result.execution.verdict = 'fail'
             if hasattr(report, "wasxfail"):
@@ -88,8 +90,8 @@ class OpenTmiReport:
         result = self._new_result(report)
         result.execution.verdict = 'inconclusive'
         if report.longrepr.reprcrash:
-            result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
-                                    f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+            result.execution.note = f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}\n'\
+                                    f'{report.longrepr.reprcrash.message}\n'
         else:
             result.execution.note = ''
         self.results.append(result)
@@ -118,12 +120,14 @@ class OpenTmiReport:
             self.passed -= 1  # self.passed was incremented in _append_passed() for call phase -> decrement passed
             self.failed += 1  # self.failed have to be updated accordingly -> increment failed
             last_result.execution.verdict = 'fail'
-            last_result.execution.note = f'Failed on teardown: {report.longrepr.reprcrash.message}\n' \
-                                              f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+            last_result.execution.note = f'Failed on teardown: ' \
+                                         f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}\n' \
+                                         f'{report.longrepr.reprcrash.message}'
         else:
             # No need for verdict modification, update info on execution note, to get info available in opentmi
-            last_result.execution.note += f'\nFailed on teardown: {report.longrepr.reprcrash.message}\n' \
-                                          f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+            last_result.execution.note += f'\nFailed on teardown: ' \
+                                          f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}\n' \
+                                          f'{report.longrepr.reprcrash.message}'
         # update result with updated last_result
         self.results[-1] = last_result
 
@@ -254,6 +258,11 @@ class OpenTmiReport:
 
         return result
 
+    @staticmethod
+    def _cut_long_note(result: Result):
+        if result.execution.note:
+            result.execution.note = result.execution.note[:OpenTmiReport.MAX_EXEC_NOTE_LENGTH]
+
     def _link_session(self, session, result):  # pylint: disable=unused-argument
         # dut = Dut()
         # dut.serial_number = ''
@@ -264,6 +273,7 @@ class OpenTmiReport:
             numtests=self._numtests
         )
         result.execution.profiling['generated_at'] = self._generated.isoformat()
+        OpenTmiReport._cut_long_note(result)
 
     def _upload_report(self, result: Result):
         try:

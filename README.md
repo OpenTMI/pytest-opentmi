@@ -22,6 +22,10 @@ Running with pytest:
 `pytest --opentmi <host> --opentmi_token <token> [--opentmi_store_logs]`
 
 
+### Configuration
+
+* env variable `OPENTMI_MAX_EXEC_NOTE_LENGTH` can be used to cut long failure notes. Default 1000 characters.
+
 ### metadata
 
 module utilize some special pytest metadata keys.
