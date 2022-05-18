@@ -19,6 +19,9 @@ class OpenTmiReport:
     """
     OpenTmiReport class
     """
+
+    MAX_EXEC_NOTE_LENGTH: int = int(os.environ.get('OPENTMI_MAX_EXEC_NOTE_LENGTH', '1000'))
+
     def __init__(self, config):
         """
         Constructor
@@ -254,6 +257,11 @@ class OpenTmiReport:
 
         return result
 
+    @staticmethod
+    def _cut_long_note(result: Result):
+        if result.execution.note:
+            result.execution.note = result.execution.note[:OpenTmiReport.MAX_EXEC_NOTE_LENGTH]
+
     def _link_session(self, session, result):  # pylint: disable=unused-argument
         # dut = Dut()
         # dut.serial_number = ''
@@ -264,6 +272,7 @@ class OpenTmiReport:
             numtests=self._numtests
         )
         result.execution.profiling['generated_at'] = self._generated.isoformat()
+        OpenTmiReport._cut_long_note(result)
 
     def _upload_report(self, result: Result):
         try:
