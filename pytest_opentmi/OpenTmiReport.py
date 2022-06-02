@@ -130,6 +130,15 @@ class OpenTmiReport:
         # update result with updated last_result
         self.results[-1] = last_result
 
+    def _update_user_properties(self, report, result=None):
+        if report.user_properties:
+            if not result:
+                result = self.results[-1]
+            if not 'properties' in result.execution.profiling:
+                result.execution.profiling['properties'] = {}
+            for (key, value) in report.user_properties:
+                result.execution.profiling['properties'][key] = value
+
     @staticmethod
     def _get_tcid(report):
         return report.head_line.rstrip("[]")
@@ -188,10 +197,7 @@ class OpenTmiReport:
         result.execution.sut.tag = tag
         result.job.id = os.environ.get('BUILD_TAG', str(uuid.uuid1()))
         result.campaign = os.environ.get('JOB_NAME', "")
-        if report.user_properties:
-            result.execution.profiling['properties'] = {}
-        for (key, value) in report.user_properties:
-            result.execution.profiling['properties'][key] = value
+        self._update_user_properties(report=report, result=result)
         if report.keywords:
             result.execution.profiling['keywords'] = []
         for key in report.keywords:
@@ -335,6 +341,7 @@ class OpenTmiReport:
             elif report.skipped:
                 self._append_skipped(report)
         elif report.when == 'teardown':
+            self._update_user_properties(report=report)
             # Update test result only if teardown result != passed
             if not report.passed:
                 self._update_teardown_result(report)
