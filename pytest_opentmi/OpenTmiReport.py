@@ -6,12 +6,15 @@ import time
 import datetime
 import uuid
 import inspect
+import logging
 from multiprocessing.dummy import Pool as ThreadPool
 # 3rd party modules
 from opentmi_client import OpenTmiClient, Result
 from opentmi_client.api import Dut, File, Provider, Testcase
 # app modules
 from . import __pytest_info__
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -283,7 +286,8 @@ class OpenTmiReport:
     def _upload_report(self, result: Result):
         try:
             data = self._client.post_result(result)
-            print(data)
+            logger.info(f"Uploaded {result.tcid} successfully, id: {data['id']}")
+            logger.debug(f"Uploaded {result.tcid} successfully, data: {data}")
             self._uploaded_success += 1
         except Exception:  # pylint: disable=broad-except
             self._uploaded_failed += 1
@@ -298,8 +302,11 @@ class OpenTmiReport:
         [self._link_session(session, result) for result in self.results]
 
         # pylint: disable=expression-not-assigned
-        [print(result.data) for result in self.results]
-        [print(test) for test in self.tests]
+        logger.info(f'Test results to be upload ({len(self.results)})')
+        [logger.debug(result.data) for result in self.results]
+
+        logger.info(f'Test cases to be upload ({len(self.tests)})')
+        [logger.debug(test) for test in self.tests]
 
         token = self.config.getoption("opentmi_token")
         pool = ThreadPool(10)
@@ -310,8 +317,9 @@ class OpenTmiReport:
             pool.map(self._upload_report, self.results)
             pool.close()
             pool.join()
+            logger.info('All results uploaded successfully')
         except Exception as error:  # pylint: disable=broad-except
-            print(error)
+            logger.error(error)
 
     @staticmethod
     def _get_test_key(item):

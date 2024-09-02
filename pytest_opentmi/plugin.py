@@ -2,9 +2,12 @@
 pytest plugin
 """
 import os
+import logging
 # app modules
 from . import __version__
 from .OpenTmiReport import OpenTmiReport
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -59,6 +62,7 @@ def pytest_configure(config):
             # prevent opening opentmi reporter on slave nodes (xdist)
             config._opentmi = OpenTmiReport(config)  # pylint: disable=protected-access
             config.pluginmanager.register(config._opentmi)  # pylint: disable=protected-access
+            logger.debug(f'Opentmi reporter enabled: {host}')
 
 
 def pytest_unconfigure(config):

@@ -30,7 +30,7 @@ setup(
     # Similar to `install_requires` above, these must be valid existing
     # projects.
     extras_require={  # Optional
-        'dev': ['coverage', 'coveralls', 'mock', 'pylint==2.15.10', 'nose', 'pyinstaller']
+        'dev': ['coverage', 'coveralls', 'mock', 'pylint==2.15.10', 'pynose', 'pyinstaller']
     },
     license="Mozilla Public License 2.0 (MPL 2.0)",
     keywords="py.test pytest opentmi report",
@@ -48,9 +48,10 @@ setup(
         "Topic :: Utilities",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3 :: Only",
     ],
 )
