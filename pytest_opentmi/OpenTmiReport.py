@@ -8,6 +8,9 @@ import uuid
 import inspect
 import logging
 from multiprocessing.dummy import Pool as ThreadPool
+
+from _pytest.fixtures import FixtureLookupErrorRepr
+
 # 3rd party modules
 from opentmi_client import OpenTmiClient, Result
 from opentmi_client.api import Dut, File, Provider, Testcase
@@ -93,11 +96,12 @@ class OpenTmiReport:
         # For now, the only "other" the plugin give support is rerun
         result = self._new_result(report)
         result.execution.verdict = 'inconclusive'
-        if report.longrepr.reprcrash:
-            result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
-                                    f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
+        if isinstance(report.longrepr, FixtureLookupErrorRepr):
+            # reprcrash is not available for FixtureLookupError
+            result.execution.note = f'FixtureLookupError: {report.longrepr}'
         else:
-            result.execution.note = ''
+            result.execution.note = f'{report.longrepr.reprcrash.message}\n' \
+                                f'{report.longrepr.reprcrash.path}:{report.longrepr.reprcrash.lineno}'
         self.results.append(result)
 
     # pylint: disable=too-many-branches
