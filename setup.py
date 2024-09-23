@@ -30,7 +30,7 @@ setup(
     # Similar to `install_requires` above, these must be valid existing
     # projects.
     extras_require={  # Optional
-        'dev': ['coverage', 'coveralls', 'mock', 'pylint==2.15.10', 'pynose', 'pyinstaller']
+        'dev': ['coverage', 'coveralls', 'mock', 'pylint==3.3.0', 'pynose', 'pyinstaller']
     },
     license="Mozilla Public License 2.0 (MPL 2.0)",
     keywords="py.test pytest opentmi report",
