@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -54,13 +54,13 @@ jobs:
             htmlcov/*
             junit/*
       - name: install rel deps
-        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
         run: |
           pip install wheel twine
           python setup.py sdist
           python setup.py bdist_wheel
       - name: upload to pypi
-        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
         env:
           TWINE_USERNAME: "${{secrets.TWINE_USERNAME}}"
           TWINE_PASSWORD: "${{secrets.TWINE_PASSWORD}}"

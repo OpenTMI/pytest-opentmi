@@ -1,6 +1,7 @@
 """
 OpenTmiReport module
 """
+import json
 import os
 import time
 import datetime
@@ -214,6 +215,16 @@ class OpenTmiReport:
         dut = None
         for item in self.config.option.metadata:
             key, value = item
+
+            if not isinstance(key, str):
+                logger.warning(f"Metadata key is not string: {key}")
+                continue
+            # ensure value is JSON serializable with JSON.dumps
+            try:
+                json.dumps(value)
+            except TypeError:
+                logger.warning(f"Metadata value is not JSON serializable: {value}")
+                continue
 
             # Dut
             if key.startswith('DUT') and not dut:
