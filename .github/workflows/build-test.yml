@@ -40,6 +40,7 @@ jobs:
       #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #  run: coveralls
       - name: pylint
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
         run: |
             pylint pytest_opentmi
       - name: run example
