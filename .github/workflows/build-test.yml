@@ -45,7 +45,7 @@ jobs:
       - name: run example
         working-directory: example
         run: |
-            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsang example.py
+            pytest --opentmi localhost:3000 --opentmi_token 123 --metadata foo bar --metadata DUT_SERIAL_NUMBER 123 --metadata DUT_MODEL S5 --metadata DUT_VENDOR samsung test_example.py
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
