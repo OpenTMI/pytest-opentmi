@@ -23,6 +23,6 @@ except PackageNotFoundError:
 
 __pypi_url__ = "https://pypi.python.org/pypi/pytest-opentmi"
 try:
-    __pytest_info__ = _FrameworkInfo("pytest", version('pytest'))
+    __pytest_info__ = _FrameworkInfo("pytest", version("pytest"))
 except PackageNotFoundError:
     __pytest_info__ = _FrameworkInfo("pytest", "unknown")
