@@ -20,7 +20,13 @@ setup(
     # package_data={"pytest_opentmi": ["resources/*"]},
     entry_points={"pytest11": ["pytest_opentmi = pytest_opentmi.plugin"]},
     setup_requires=["setuptools_scm"],
-    install_requires=["pytest>=5.0", "pytest-metadata", "opentmi-client>=0.10.1", "joblib"],
+    install_requires=[
+        "pytest>=5.0",
+        "pytest-metadata",
+        "opentmi-client>=0.10.1",
+        "joblib",
+        "importlib-metadata>=1.0; python_version < '3.8'",
+    ],
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
     # syntax, for example:

@@ -1,13 +1,28 @@
 """
 pytest-opentmi
 """
-from pkg_resources import get_distribution, DistributionNotFound
+try:
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:
+    # Python < 3.8
+    from importlib_metadata import version, PackageNotFoundError
+
+
+class _FrameworkInfo:  # pylint: disable=R0903
+    """Simple container for framework information"""
+    def __init__(self, project_name, pkg_version):
+        self.project_name = project_name
+        self.version = pkg_version
+
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
+    __version__ = version(__name__)
+except PackageNotFoundError:
     # package is not installed
     __version__ = "unknown"
 
 __pypi_url__ = "https://pypi.python.org/pypi/pytest-opentmi"
-__pytest_info__ = get_distribution("pytest")
+try:
+    __pytest_info__ = _FrameworkInfo("pytest", version("pytest"))
+except PackageNotFoundError:
+    __pytest_info__ = _FrameworkInfo("pytest", "unknown")
