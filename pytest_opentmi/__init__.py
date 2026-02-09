@@ -8,7 +8,7 @@ except ImportError:
     from importlib_metadata import version, PackageNotFoundError
 
 
-class _FrameworkInfo:
+class _FrameworkInfo:  # pylint: disable=R0903
     """Simple container for framework information"""
     def __init__(self, project_name, pkg_version):
         self.project_name = project_name
